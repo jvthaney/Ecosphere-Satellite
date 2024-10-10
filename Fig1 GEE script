@@ -1,0 +1,56 @@
+///// GOOGLE EARTH ENGINE SCRIPT for Ecosphere manuscript 2024
+// Created Feb 1, 2023 by J.V.Trout-Haney
+
+// Define geographic points
+var ashokan = ee.Geometry.Point(-74.20765805720865, 41.95377751983081);
+var sabattus = ee.Geometry.Point(-70.10456438680289, 44.15475940420505);
+
+// Define Landsat 8 and Landsat 5 collections
+var ls8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2");
+var ls5 = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2");
+
+////////////////////////////////////////////////////////////
+///////////////// SEARCH FOR IMAGES ///////////////////////
+//////////////////////////////////////////////////////////
+
+// Lake Sabattus bloom - Sep 2017
+var sabattus_ls8 = ls8
+  .filterBounds(sabattus)
+  .filterDate('2017-04-01', '2018-01-31');
+print(sabattus_ls8, 'Sabattus LS8');
+
+// Ashokan Reservoir (Landsat 5) - Hurricane Irene 28 Aug 2011
+var ashokan_ls5 = ls5
+  .filterBounds(ashokan)
+  .filterDate('2011-06-01', '2012-05-30');
+print(ashokan_ls5, 'Ashokan LS5');
+
+////////////////////////////////////////////////////////////
+///////////////// VISUALIZE IMAGES ///////////////////////
+//////////////////////////////////////////////////////////
+
+// Visualizing specific images from Sabattus in 2017
+var Sep11 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170911').select(['SR_B.']);
+Map.addLayer(Sep11, ls8_viz, '11Sep2017');
+
+var June14 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_012029_20170614').select(['SR_B.']);
+Map.addLayer(June14, ls8_viz, '14June2017');
+
+var June7 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170607').select(['SR_B.']);
+Map.addLayer(June7, ls8_viz, '7June2017');
+
+var July9 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170709').select(['SR_B.']);
+Map.addLayer(July9, ls8_viz, '9July2017');
+
+var Aug10 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170810').select(['SR_B.']);
+Map.addLayer(Aug10, ls8_viz, '10Aug2017');
+
+var Oct13 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20171013').select(['SR_B.']);
+Map.addLayer(Oct13, ls8_viz, '13Oct2017');
+
+var Nov30 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20171130').select(['SR_B.']);
+Map.addLayer(Nov30, ls8_viz, '30Nov2017');
+
+// Visualize Ashokan Reservoir after Hurricane Irene, 2011
+var Sep16 = ee.Image('LANDSAT/LT05/C02/T1_L2/LT05_014031_20110916');
+Map.addLayer(Sep16,ls5_viz2,'16Sep2011');
