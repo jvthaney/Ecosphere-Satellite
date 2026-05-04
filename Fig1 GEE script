@@ -1,56 +1,147 @@
-///// GOOGLE EARTH ENGINE SCRIPT for Ecosphere manuscript 2024
-// Created Feb 1, 2023 by J.V.Trout-Haney
+// Google Earth Engine script for Ecosphere manuscript Fig. 1
+// Author: J. V. Trout-Haney
+// Created: 2023-02-01
+// Updated: 2026-05-04
+//
+// Purpose:
+// This script identifies and visualizes Landsat scenes used to create Fig. 1.
+// Scenes include Sabattus Pond, Maine during the 2017 bloom season and
+// Ashokan Reservoir, New York following Hurricane Irene in 2011.
+//
+// Data:
+// Landsat 8 Collection 2 Tier 1 Level 2 Surface Reflectance
+// Landsat 5 Collection 2 Tier 1 Level 2 Surface Reflectance
 
-// Define geographic points
-var ashokan = ee.Geometry.Point(-74.20765805720865, 41.95377751983081);
-var sabattus = ee.Geometry.Point(-70.10456438680289, 44.15475940420505);
+// ------------------------------------------------------------
+// Define sites
+// ------------------------------------------------------------
 
-// Define Landsat 8 and Landsat 5 collections
-var ls8 = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2");
-var ls5 = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2");
+var sites = {
+  ashokan: ee.Geometry.Point([-74.20765805720865, 41.95377751983081]),
+  sabattus: ee.Geometry.Point([-70.10456438680289, 44.15475940420505])
+};
 
-////////////////////////////////////////////////////////////
-///////////////// SEARCH FOR IMAGES ///////////////////////
-//////////////////////////////////////////////////////////
+Map.centerObject(sites.sabattus, 9);
 
-// Lake Sabattus bloom - Sep 2017
-var sabattus_ls8 = ls8
-  .filterBounds(sabattus)
+// ------------------------------------------------------------
+// Define image collections
+// ------------------------------------------------------------
+
+var ls8 = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2');
+var ls5 = ee.ImageCollection('LANDSAT/LT05/C02/T1_L2');
+
+// ------------------------------------------------------------
+// Apply Landsat Collection 2 Level 2 optical-band scaling
+// ------------------------------------------------------------
+
+function scaleOpticalBands(image) {
+  var opticalBands = image.select('SR_B.*')
+    .multiply(0.0000275)
+    .add(-0.2);
+
+  return image
+    .addBands(opticalBands, null, true)
+    .copyProperties(image, image.propertyNames());
+}
+
+// ------------------------------------------------------------
+// Visualization parameters
+// ------------------------------------------------------------
+
+// Landsat 8 true color: red, green, blue = SR_B4, SR_B3, SR_B2
+var ls8TrueColorViz = {
+  bands: ['SR_B4', 'SR_B3', 'SR_B2'],
+  min: 0.0,
+  max: 0.3
+};
+
+// Landsat 5 true color: red, green, blue = SR_B3, SR_B2, SR_B1
+var ls5TrueColorViz = {
+  bands: ['SR_B3', 'SR_B2', 'SR_B1'],
+  min: 0.0,
+  max: 0.3
+};
+
+// ------------------------------------------------------------
+// Search image collections
+// ------------------------------------------------------------
+
+// Sabattus Pond bloom season, 2017
+var sabattusLs8 = ls8
+  .filterBounds(sites.sabattus)
   .filterDate('2017-04-01', '2018-01-31');
-print(sabattus_ls8, 'Sabattus LS8');
 
-// Ashokan Reservoir (Landsat 5) - Hurricane Irene 28 Aug 2011
-var ashokan_ls5 = ls5
-  .filterBounds(ashokan)
+print('Sabattus Pond Landsat 8 scenes, 2017 bloom season', sabattusLs8);
+
+// Ashokan Reservoir after Hurricane Irene, 2011
+var ashokanLs5 = ls5
+  .filterBounds(sites.ashokan)
   .filterDate('2011-06-01', '2012-05-30');
-print(ashokan_ls5, 'Ashokan LS5');
 
-////////////////////////////////////////////////////////////
-///////////////// VISUALIZE IMAGES ///////////////////////
-//////////////////////////////////////////////////////////
+print('Ashokan Reservoir Landsat 5 scenes after Hurricane Irene', ashokanLs5);
 
-// Visualizing specific images from Sabattus in 2017
-var Sep11 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170911').select(['SR_B.']);
-Map.addLayer(Sep11, ls8_viz, '11Sep2017');
+// ------------------------------------------------------------
+// Function for adding individual scenes to the map
+// ------------------------------------------------------------
 
-var June14 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_012029_20170614').select(['SR_B.']);
-Map.addLayer(June14, ls8_viz, '14June2017');
+function addLandsatScene(imageId, label, vizParams) {
+  var image = scaleOpticalBands(ee.Image(imageId));
+  Map.addLayer(image, vizParams, label);
+  print(label, image);
+}
 
-var June7 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170607').select(['SR_B.']);
-Map.addLayer(June7, ls8_viz, '7June2017');
+// ------------------------------------------------------------
+// Sabattus Pond, Maine: Landsat 8 scenes from 2017
+// ------------------------------------------------------------
 
-var July9 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170709').select(['SR_B.']);
-Map.addLayer(July9, ls8_viz, '9July2017');
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_011029_20170607',
+  'Sabattus Pond - 7 Jun 2017',
+  ls8TrueColorViz
+);
 
-var Aug10 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20170810').select(['SR_B.']);
-Map.addLayer(Aug10, ls8_viz, '10Aug2017');
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_012029_20170614',
+  'Sabattus Pond - 14 Jun 2017',
+  ls8TrueColorViz
+);
 
-var Oct13 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20171013').select(['SR_B.']);
-Map.addLayer(Oct13, ls8_viz, '13Oct2017');
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_011029_20170709',
+  'Sabattus Pond - 9 Jul 2017',
+  ls8TrueColorViz
+);
 
-var Nov30 = ee.Image('LANDSAT/LC08/C02/T1_L2/LC08_011029_20171130').select(['SR_B.']);
-Map.addLayer(Nov30, ls8_viz, '30Nov2017');
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_011029_20170810',
+  'Sabattus Pond - 10 Aug 2017',
+  ls8TrueColorViz
+);
 
-// Visualize Ashokan Reservoir after Hurricane Irene, 2011
-var Sep16 = ee.Image('LANDSAT/LT05/C02/T1_L2/LT05_014031_20110916');
-Map.addLayer(Sep16,ls5_viz2,'16Sep2011');
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_011029_20170911',
+  'Sabattus Pond - 11 Sep 2017',
+  ls8TrueColorViz
+);
+
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_011029_20171013',
+  'Sabattus Pond - 13 Oct 2017',
+  ls8TrueColorViz
+);
+
+addLandsatScene(
+  'LANDSAT/LC08/C02/T1_L2/LC08_011029_20171130',
+  'Sabattus Pond - 30 Nov 2017',
+  ls8TrueColorViz
+);
+
+// ------------------------------------------------------------
+// Ashokan Reservoir, New York: Landsat 5 scene after Hurricane Irene
+// ------------------------------------------------------------
+
+addLandsatScene(
+  'LANDSAT/LT05/C02/T1_L2/LT05_014031_20110916',
+  'Ashokan Reservoir - 16 Sep 2011',
+  ls5TrueColorViz
+);
